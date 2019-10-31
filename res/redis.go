@@ -1,0 +1,2 @@
+// Package res
+package res
