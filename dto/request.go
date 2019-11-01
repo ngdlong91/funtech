@@ -2,6 +2,6 @@
 package dto
 
 type RequestPurchase struct {
-	Id       int       `json:"id"`
-	Products []Product `json:"products"`
+	Id       int       `json:"customer_id" binding:"required"`
+	Products []Product `json:"products" binding:"required"`
 }
