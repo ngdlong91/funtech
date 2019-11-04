@@ -25,7 +25,7 @@ func Test_temp_Select(t *testing.T) {
 
 	})
 
-	t.Run("temp repo response successs", func(t *testing.T) {
+	t.Run("temp repo response success", func(t *testing.T) {
 
 	})
 }
