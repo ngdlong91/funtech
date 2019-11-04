@@ -3,11 +3,10 @@ package product
 
 import (
 	"context"
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"fmt"
 
 	"github.com/ngdlong91/funtech/cmd/gin/dto"
+
 	"github.com/ngdlong91/funtech/cmd/gin/pkg/product/uc"
 )
 
@@ -18,46 +17,11 @@ type Service interface {
 	Cancel()
 }
 
-type GinHandler struct {
-	processor uc.Product
-}
-
-func (s *GinHandler) Purchase(c *gin.Context) {
-	var requestPayload dto.RequestPurchase
-	if err := c.ShouldBindJSON(&requestPayload); err != nil {
-		c.JSON(http.StatusBadRequest, dto.Response{
-			Code: dto.CodeClientErr,
-			Msg:  "payload invalid",
-		})
-		return
-	}
-
-	if err := s.processor.Purchase(requestPayload); err != nil {
-		c.JSON(http.StatusServiceUnavailable, dto.Response{
-			Code: dto.CodeProcessErr,
-			Msg:  err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, dto.PurchaseResponse{
-		Response: dto.Response{
-			Msg: "success",
-		},
-		Results: []dto.PurchaseResult{},
-	})
-
-}
-
 type RPCHandler struct {
 	productUC uc.Product
 }
 
-func (s *RPCHandler) DoPurchase(context.Context, *PurchaseRequest) (*PurchaseResponse, error) {
-	return &PurchaseResponse{}, nil
-}
-
-func (s *RPCHandler) Purchase() {
+func (s *RPCHandler) DoPurchase(c context.Context, payload *PurchaseRequest) (*PurchaseResponse, error) {
 	// Problems:
 	// We have 100 req at the same time and 20/100 req should success with some item
 	// So the other should fail and cancel the current process
@@ -75,14 +39,49 @@ func (s *RPCHandler) Purchase() {
 	//	Products: []dto.Product{},
 	//}
 	//go s.productUC.Purchase(requestPayload)
-}
+	//s.productUC.Purchase(payload)
 
-func NewGinService() *GinHandler {
-	return &GinHandler{
-		processor: uc.NewProductProcessor(),
+	fmt.Printf("payload %+v \n", payload)
+
+	internalPayload := dto.RequestPurchase{
+		Id:       int(payload.CustomerId),
+		Products: []dto.Product{},
 	}
+
+	for _, product := range payload.Products {
+		internalProduct := dto.Product{
+			Id:       int(product.Id),
+			Quantity: int(product.Quantity),
+		}
+		internalPayload.Products = append(internalPayload.Products, internalProduct)
+	}
+
+	var response PurchaseResponse
+	internalResponse, err := s.productUC.Purchase(internalPayload)
+	if err != nil {
+		return &PurchaseResponse{}, err
+	}
+
+	fmt.Printf("Internal response %+v \n", internalResponse)
+	for _, item := range internalResponse {
+		result := PurchaseResult{
+			Id:     int32(item.Id),
+			Result: item.IsSuccess,
+		}
+		response.Result = append(response.Result, &result)
+	}
+
+	response.Response = &Response{
+		Code: 200,
+		Msg:  "Success",
+	}
+
+	fmt.Printf("Final respsonse %+v \n", response)
+	return &response, nil
 }
 
 func NewRPCHandler() *RPCHandler {
-	return &RPCHandler{}
+	return &RPCHandler{
+		productUC: uc.NewProductProcessor(),
+	}
 }

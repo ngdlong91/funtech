@@ -14,6 +14,9 @@ import (
 )
 
 func main() {
+
+	// Read from env file
+
 	// Set up a connection to the server.
 	conn, err := grpc.Dial("localhost:3000", grpc.WithInsecure())
 	if err != nil {
