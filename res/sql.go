@@ -28,7 +28,7 @@ func getInfo() string {
 
 	server := os.Getenv("SQL_SERVER")
 	if server == "" {
-		server = "root:123456@tcp(localhost:32769)/funtech"
+		panic("cannot connect sql")
 
 	}
 	return server

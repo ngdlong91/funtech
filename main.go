@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
+)
 
-func main() {
-	fmt.Println("Nothing here. Please follow README file")
+func init() {
+	if err := godotenv.Load(".env"); err != nil {
+		return
+	}
+
+	logrus.SetLevel(logrus.DebugLevel)
 }

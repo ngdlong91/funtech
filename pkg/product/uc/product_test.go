@@ -135,7 +135,7 @@ func TestProductUC_Purchase(t *testing.T) {
 		for _, req := range reqs {
 			go func() {
 				responses, err := c.Purchase(req)
-				assert.Error(t, nil, err)
+				assert.Nil(t, err)
 				for _, res := range responses {
 					assert.Equal(t, dto.PurchaseResult{Id: req.Id, IsSuccess: true}, res)
 				}
@@ -163,7 +163,7 @@ func TestProductUC_Purchase(t *testing.T) {
 		for _, req := range reqs {
 			go func() {
 				responses, err := c.Purchase(req)
-				assert.Error(t, nil, err)
+				assert.Nil(t, err)
 				for _, res := range responses {
 					assert.Equal(t, dto.PurchaseResult{Id: req.Id, IsSuccess: true}, res)
 				}

@@ -43,8 +43,8 @@ func (r *cRedis) Set(key string, val interface{}) error {
 
 func doConnect() (*redis.Client, error) {
 	server := os.Getenv("REDIS_SERVER")
-	if len(server) == 0 {
-		server = "localhost:6379"
+	if server == "" {
+		panic("cannot connect redis")
 	}
 	client := redis.NewClient(&redis.Options{
 		Addr:     server,
