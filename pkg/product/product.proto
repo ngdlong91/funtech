@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+
+service Product {
+    rpc DoPurchase (PurchaseRequest) returns (PurchaseResponse) {}
+}
+
+
+message ProductDetail {
+    int32 Id = 1;
+    int32 Quantity = 2;
+}
+
+message PurchaseRequest {
+    int32 CustomerId = 1;
+    repeated ProductDetail Products = 2;
+}
+
+message Response {
+    int32 Code = 1;
+    string Msg = 2;
+}
+
+message PurchaseResult {
+    int32 Id = 1;
+    bool result = 2;
+    string msg = 3;
+}
+
+message PurchaseResponse {
+    Response Response = 1;
+    repeated PurchaseResult Result = 2;
+}
