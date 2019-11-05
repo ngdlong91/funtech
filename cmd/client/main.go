@@ -8,17 +8,27 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/ngdlong91/funtech/cmd/gin/pkg/product"
 
 	"google.golang.org/grpc"
 )
+
+var serverAddress string
+
+func init() {
+	if err := godotenv.Load(".env"); err != nil {
+		return
+	}
+	serverAddress = os.Getenv("GRPC_SERVER")
+}
 
 func main() {
 
 	// Read from env file
 
 	// Set up a connection to the server.
-	conn, err := grpc.Dial("localhost:3000", grpc.WithInsecure())
+	conn, err := grpc.Dial(serverAddress, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
