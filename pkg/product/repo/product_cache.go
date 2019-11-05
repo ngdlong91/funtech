@@ -6,40 +6,21 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/ngdlong91/funtech/cmd/gin/dto"
 
 	"github.com/ngdlong91/funtech/cmd/gin/res"
 )
 
 type ProductCache interface {
-	Insert(quantity int) error
 	Select(id int) (dto.Product, error)
 	Update(id, quantity int) (dto.Product, error)
-	IsEnoughQuantity(id, quantity int) bool
 }
 
 type productCache struct {
+	log   *logrus.Entry
 	redis res.CRedis
-}
-
-func (r *productCache) IsEnoughQuantity(id, quantity int) bool {
-	key := fmt.Sprintf("product#%d", id)
-	valBytes, err := r.redis.Get(key)
-	if err != nil {
-		// Do db query
-		return false
-	}
-
-	var product dto.Product
-	if err := json.Unmarshal(valBytes, &product); err != nil {
-		return false
-	}
-
-	return product.Quantity >= quantity
-}
-
-func (r *productCache) Insert(quantity int) error {
-	return nil
 }
 
 func (r *productCache) Select(id int) (dto.Product, error) {
@@ -82,6 +63,7 @@ func (r *productCache) Update(id, quantity int) (dto.Product, error) {
 
 func newProductCache() ProductCache {
 	return &productCache{
+		log:   logrus.WithField("cache", "product"),
 		redis: res.RedisInstance(),
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/ngdlong91/funtech/cmd/gin/res"
@@ -20,7 +19,7 @@ var productKey = "product#%d"
 type Product interface {
 	Insert(quantity int) error
 	Select(id int) (dto.Product, error)
-	Update(id, quantity int) (dto.Product, error)
+	Purchase(id, quantity int) (dto.Product, error)
 }
 
 // cache is a temp memory storage.
@@ -49,6 +48,7 @@ func (r *product) Insert(quantity int) error {
 }
 
 func (r *product) Select(id int) (dto.Product, error) {
+	return r.doDBSelect(id)
 	product, err := r.cache.Select(id)
 	if err != nil {
 		// Get from database
@@ -75,14 +75,12 @@ func (r *product) Select(id int) (dto.Product, error) {
 }
 
 func (r *product) doDBSelect(id int) (dto.Product, error) {
-
 	result, err := r.conn.Query("SELECT id, quantity FROM product WHERE id = ?", id)
 	if err != nil {
 		r.log.Errorf("cannot select product err: %s \n", err.Error())
 		return dto.Product{}, err
 	}
 
-	fmt.Printf("Query result %+v \n", result)
 	for result.Next() {
 		var product dto.Product
 		if err := result.Scan(&product.Id, &product.Quantity); err != nil {
@@ -96,49 +94,60 @@ func (r *product) doDBSelect(id int) (dto.Product, error) {
 	return dto.Product{}, errors.New("record not found")
 }
 
-func (r *product) Update(id, quantity int) (dto.Product, error) {
+func (r *product) Purchase(id, quantity int) (dto.Product, error) {
 	if _, err := r.cache.Update(id, quantity); err != nil {
-
 		r.log.Errorf("cannot update cache err: %s \n", err.Error())
 		// Todo: Handle case temp storage got problem. Go back or turn flag for this
 	}
 
+	r.log.Debugf("begin transaction, try to purchase id %d with quantity %d \n", id, quantity)
 	// Do db update
 	tx, err := r.conn.Begin()
 	if err != nil {
 		r.log.Errorf("begin transaction error \n", err.Error())
 		return dto.Product{}, err
 	}
+	r.log.Debugf("Try to get details")
+	rows, err := tx.Query("SELECT id, quantity from product where id = ? FOR SHARE", id)
+	if err != nil {
+		r.log.Errorf("Get product details %s \n", err.Error())
+		return dto.Product{}, errors.New("cannot get product detail ")
+	}
 
-	if _, err := tx.Exec("SELECT quantity from product where id = ? for update ", id); err != nil {
-		r.log.Errorf("cannot lock cols err: %s \n", err.Error())
-		if err := tx.Rollback(); err != nil {
-			r.log.Errorf("Rollback err: %s \n", err.Error())
+	var product dto.Product
+	for rows.Next() {
+		if err := rows.Scan(&product.Id, &product.Quantity); err != nil {
 			return dto.Product{}, err
 		}
+	}
+	if err := rows.Close(); err != nil {
 		return dto.Product{}, err
 	}
 
-	if _, err := tx.Exec(`UPDATE product SET quantity = (quantity - ?) WHERE id = ?`, quantity, id); err != nil {
-		r.log.Errorf("cannot update record err: %s \n", err.Error())
-		if err := tx.Rollback(); err != nil {
-			r.log.Errorf("rollback err: %s \n", err.Error())
+	r.log.Debugf("Product details %+v \n", product)
+
+	if product.Quantity >= quantity {
+		if _, err := tx.Exec(`UPDATE product SET quantity = (quantity - ?) WHERE id = ?`, quantity, id); err != nil {
+			r.log.Errorf("cannot update record err: %s \n", err.Error())
+			if err := tx.Rollback(); err != nil {
+				r.log.Errorf("rollback err: %s \n", err.Error())
+				return dto.Product{}, err
+			}
 			return dto.Product{}, err
 		}
-		return dto.Product{}, err
-	}
 
-	if err := tx.Commit(); err != nil {
-		r.log.Errorf("cannot commit err: %s \n", err.Error())
-		if err := tx.Rollback(); err != nil {
-			r.log.Errorf("rollback err: %s \n", err.Error())
+		if err := tx.Commit(); err != nil {
+			r.log.Errorf("cannot commit err: %s \n", err.Error())
+			if err := tx.Rollback(); err != nil {
+				r.log.Errorf("rollback err: %s \n", err.Error())
+				return dto.Product{}, err
+			}
 			return dto.Product{}, err
 		}
-		return dto.Product{}, err
-	}
 
-	// Return new product data from db
-	return r.Select(id)
+		return dto.Product{}, nil
+	}
+	return dto.Product{}, errors.New("out of stock")
 }
 
 func NewProduct() Product {

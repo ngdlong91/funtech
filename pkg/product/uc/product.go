@@ -8,6 +8,10 @@ import (
 	"github.com/ngdlong91/funtech/cmd/gin/dto"
 )
 
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+}
+
 type Product interface {
 	Purchase(payload dto.RequestPurchase) ([]dto.PurchaseResult, error)
 }
@@ -25,32 +29,34 @@ func (c *product) Purchase(payload dto.RequestPurchase) ([]dto.PurchaseResult, e
 	var results []dto.PurchaseResult
 	for _, item := range payload.Products {
 		var result dto.PurchaseResult
-		product, err := c.productRepo.Select(item.Id)
-		if err != nil {
-			result = dto.PurchaseResult{
-				Id:        item.Id,
-				IsSuccess: false,
-			}
-			results = append(results, result)
-			continue
-		}
-		c.log.Infof("Product details %+v \n", product)
 
-		if product.Quantity < item.Quantity {
-			c.log.Errorf("product quantity is not enough")
+		//product, err := c.productRepo.Select(item.Id)
+		//if err != nil {
+		//	result = dto.PurchaseResult{
+		//		Id:        item.Id,
+		//		IsSuccess: false,
+		//	}
+		//	results = append(results, result)
+		//	continue
+		//}
+		//c.log.Debugf("Product details %+v \n", product)
+		//if product.Quantity < item.Quantity {
+		//	c.log.Errorf("product quantity is not enough")
+		//	result = dto.PurchaseResult{
+		//		Id:        item.Id,
+		//		IsSuccess: false,
+		//		Result:    "out of stock",
+		//	}
+		//	results = append(results, result)
+		//	continue
+		//}
+		c.log.Debugf("Start purchase...")
+		if _, err := c.productRepo.Purchase(item.Id, item.Quantity); err != nil {
+			c.log.Errorf("Purchase product err: %s \n", err.Error())
 			result = dto.PurchaseResult{
 				Id:        item.Id,
 				IsSuccess: false,
-			}
-			results = append(results, result)
-			continue
-		}
-
-		if _, err := c.productRepo.Update(item.Id, item.Quantity); err != nil {
-			c.log.Errorf("Update product err: %s \n", err.Error())
-			result = dto.PurchaseResult{
-				Id:        item.Id,
-				IsSuccess: false,
+				Result:    "out of stock",
 			}
 			results = append(results, result)
 			continue

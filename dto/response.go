@@ -23,6 +23,7 @@ type PurchaseResponse struct {
 }
 
 type PurchaseResult struct {
-	Id        int  `json:"id"`
-	IsSuccess bool `json:"is_success"`
+	Id        int    `json:"id"`
+	IsSuccess bool   `json:"is_success"`
+	Result    string `json:"result"`
 }
