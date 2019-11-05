@@ -9,10 +9,13 @@ II. Setup & run
 -
 - Install:
     
-    `go get github.com/ngdlong91/funtech`
-
-    `go mod tidy` for required package
-
+  ```sh
+  go get github.com/ngdlong91/funtech
+  ```
+  
+  ```shell script
+  go mod tidy
+  ```
 
 - Run:
 
@@ -20,10 +23,12 @@ II. Setup & run
     
     gRPC simple client is located in cmd/client
     
-    Run with `go run main.go`
+    Run command
+    ```sh
+    go run main.go
+    ```
      
     Config environment using .env file
-    
     
         - Client call purchase API
         - First args is CustomerId
@@ -31,8 +36,11 @@ II. Setup & run
     
     For example:
     
-    `go run main.go 5 1 3 5 2` will make request to /purchase API with payload
-    ```
+    ```sh
+    go run main.go 5 1 3 5 2
+     ``` 
+  will make request to /purchase API with payload
+    ```code
     {
         CustomerId: 5,
         Products: [
@@ -50,6 +58,9 @@ II. Setup & run
     - GRPC Server
     Server is located in cmd/grpc
     
-    Run `go run main.go`
+    Run 
+    ```sh
+    go run main.go
+    ```
     
-    Config environment using .env file
+  Config environment using .env file
