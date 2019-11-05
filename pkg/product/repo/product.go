@@ -16,13 +16,13 @@ import (
 
 var productKey = "product#%d"
 
-type Product interface {
+type ProductRepo interface {
 	Insert(quantity int) error
 	Select(id int) (dto.Product, error)
 	Purchase(id, quantity int) (dto.Product, error)
 }
 
-// cache is a temp memory storage.
+// cache is a temp memory storage.s
 type cache struct {
 	// redis
 	redis res.CRedis
@@ -124,7 +124,7 @@ func (r *product) Purchase(id, quantity int) (dto.Product, error) {
 		return dto.Product{}, err
 	}
 
-	r.log.Debugf("Product details %+v \n", product)
+	r.log.Debugf("ProductRepo details %+v \n", product)
 
 	if product.Quantity >= quantity {
 		if _, err := tx.Exec(`UPDATE product SET quantity = (quantity - ?) WHERE id = ?`, quantity, id); err != nil {
@@ -150,7 +150,7 @@ func (r *product) Purchase(id, quantity int) (dto.Product, error) {
 	return dto.Product{}, errors.New("out of stock")
 }
 
-func NewProduct() Product {
+func NewProduct() ProductRepo {
 	return &product{
 		cache: newProductCache(),
 		log:   logrus.WithField("services", "product"),

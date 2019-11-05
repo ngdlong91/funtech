@@ -20,7 +20,7 @@ type Service interface {
 
 type RPCHandler struct {
 	log       *logrus.Entry
-	productUC uc.Product
+	productUC uc.ProductUseCase
 }
 
 func (s *RPCHandler) DoPurchase(c context.Context, payload *PurchaseRequest) (*PurchaseResponse, error) {
@@ -38,7 +38,7 @@ func (s *RPCHandler) DoPurchase(c context.Context, payload *PurchaseRequest) (*P
 	//cancelCtx, cancel := context.WithCancel(ctx)
 	//requestPayload := dto.RequestPurchase{
 	//	Id:       0,
-	//	Products: []dto.Product{},
+	//	Products: []dto.ProductUseCase{},
 	//}
 	//go s.productUC.Purchase(requestPayload)
 	//s.productUC.Purchase(payload)

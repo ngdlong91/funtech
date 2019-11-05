@@ -8,14 +8,13 @@ import (
 	"github.com/ngdlong91/funtech/cmd/gin/dto"
 )
 
-type Product interface {
+type ProductUseCase interface {
 	Purchase(payload dto.RequestPurchase) ([]dto.PurchaseResult, error)
 }
 
 type product struct {
-	log          *logrus.Entry
-	productRepo  repo.Product
-	productCache repo.ProductCache
+	log         *logrus.Entry
+	productRepo repo.ProductRepo
 }
 
 // Purchase process request from client
@@ -54,7 +53,7 @@ func (c *product) Purchase(payload dto.RequestPurchase) ([]dto.PurchaseResult, e
 
 }
 
-func NewProductProcessor() Product {
+func NewProductProcessor() ProductUseCase {
 	return &product{
 		log:         logrus.WithField("uc", "product"),
 		productRepo: repo.NewProduct(),
