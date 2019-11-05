@@ -25,32 +25,13 @@ func (c *product) Purchase(payload dto.RequestPurchase) ([]dto.PurchaseResult, e
 	var results []dto.PurchaseResult
 	for _, item := range payload.Products {
 		var result dto.PurchaseResult
-		product, err := c.productRepo.Select(item.Id)
-		if err != nil {
+		c.log.Debugf("Start handle purchase request...")
+		if _, err := c.productRepo.Purchase(item.Id, item.Quantity); err != nil {
+			c.log.Errorf("Purchase product err: %s \n", err.Error())
 			result = dto.PurchaseResult{
 				Id:        item.Id,
 				IsSuccess: false,
-			}
-			results = append(results, result)
-			continue
-		}
-		c.log.Infof("Product details %+v \n", product)
-
-		if product.Quantity < item.Quantity {
-			c.log.Errorf("product quantity is not enough")
-			result = dto.PurchaseResult{
-				Id:        item.Id,
-				IsSuccess: false,
-			}
-			results = append(results, result)
-			continue
-		}
-
-		if _, err := c.productRepo.Update(item.Id, item.Quantity); err != nil {
-			c.log.Errorf("Update product err: %s \n", err.Error())
-			result = dto.PurchaseResult{
-				Id:        item.Id,
-				IsSuccess: false,
+				Result:    "out of stock", //Out of stock
 			}
 			results = append(results, result)
 			continue
@@ -59,14 +40,15 @@ func (c *product) Purchase(payload dto.RequestPurchase) ([]dto.PurchaseResult, e
 		result = dto.PurchaseResult{
 			Id:        item.Id,
 			IsSuccess: true,
+			Result:    "purchased",
 		}
 
-		c.log.Infof("Purchased item %+v \n", item)
+		c.log.Debugf("Purchased item %+v \n", item)
 
 		results = append(results, result)
 	}
 
-	c.log.Infof("Final result %+v \n", results)
+	c.log.Debugf("Final result %+v \n", results)
 
 	return results, nil
 

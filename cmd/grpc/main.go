@@ -4,15 +4,29 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/ngdlong91/funtech/cmd/gin/pkg/product"
+	"github.com/sirupsen/logrus"
 
 	"google.golang.org/grpc"
 )
 
+var serverAddress string
+
+func init() {
+	if err := godotenv.Load(".env"); err != nil {
+		return
+	}
+	serverAddress = os.Getenv("GRPC_SERVER")
+
+	logrus.SetLevel(logrus.DebugLevel)
+}
+
 func main() {
 	fmt.Println("Start grpc server")
-	lis, err := net.Listen("tcp", ":3000")
+	lis, err := net.Listen("tcp", serverAddress)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

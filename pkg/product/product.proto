@@ -24,6 +24,7 @@ message Response {
 message PurchaseResult {
     int32 Id = 1;
     bool result = 2;
+    string msg = 3;
 }
 
 message PurchaseResponse {

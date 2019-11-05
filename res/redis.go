@@ -3,6 +3,7 @@ package res
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/go-redis/redis/v7"
 )
@@ -41,18 +42,21 @@ func (r *cRedis) Set(key string, val interface{}) error {
 }
 
 func doConnect() (*redis.Client, error) {
+	server := os.Getenv("REDIS_SERVER")
+	if server == "" {
+		panic("cannot connect redis")
+	}
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     server,
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
 
-	pong, err := client.Ping().Result()
+	_, err := client.Ping().Result()
 	if err != nil {
-		return nil, err
+		panic(err.Error())
 	}
-	fmt.Println(pong, err)
-	// Output: PONG <nil>
+	fmt.Println("Connected to redis")
 	return client, nil
 }
 
