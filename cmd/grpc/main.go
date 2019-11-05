@@ -8,6 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/ngdlong91/funtech/cmd/gin/pkg/product"
+	"github.com/sirupsen/logrus"
 
 	"google.golang.org/grpc"
 )
@@ -19,6 +20,8 @@ func init() {
 		return
 	}
 	serverAddress = os.Getenv("GRPC_SERVER")
+
+	logrus.SetLevel(logrus.DebugLevel)
 }
 
 func main() {

@@ -3,7 +3,8 @@ package product
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/ngdlong91/funtech/cmd/gin/dto"
 
@@ -18,6 +19,7 @@ type Service interface {
 }
 
 type RPCHandler struct {
+	log       *logrus.Entry
 	productUC uc.Product
 }
 
@@ -41,7 +43,7 @@ func (s *RPCHandler) DoPurchase(c context.Context, payload *PurchaseRequest) (*P
 	//go s.productUC.Purchase(requestPayload)
 	//s.productUC.Purchase(payload)
 
-	fmt.Printf("payload %+v \n", payload)
+	s.log.Debugf("payload %+v \n", payload)
 
 	internalPayload := dto.RequestPurchase{
 		Id:       int(payload.CustomerId),
@@ -62,11 +64,12 @@ func (s *RPCHandler) DoPurchase(c context.Context, payload *PurchaseRequest) (*P
 		return &PurchaseResponse{}, err
 	}
 
-	fmt.Printf("Internal response %+v \n", internalResponse)
+	s.log.Debugf("Internal response %+v \n", internalResponse)
 	for _, item := range internalResponse {
 		result := PurchaseResult{
 			Id:     int32(item.Id),
 			Result: item.IsSuccess,
+			Msg:    item.Result,
 		}
 		response.Result = append(response.Result, &result)
 	}
@@ -76,12 +79,13 @@ func (s *RPCHandler) DoPurchase(c context.Context, payload *PurchaseRequest) (*P
 		Msg:  "Success",
 	}
 
-	fmt.Printf("Final respsonse %+v \n", response)
+	s.log.Debugf("Final respsonse %+v \n", response)
 	return &response, nil
 }
 
 func NewRPCHandler() *RPCHandler {
 	return &RPCHandler{
+		log:       logrus.WithField("rpcHandler", "product"),
 		productUC: uc.NewProductProcessor(),
 	}
 }

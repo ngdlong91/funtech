@@ -46,19 +46,17 @@ func doConnect() (*redis.Client, error) {
 	if len(server) == 0 {
 		server = "localhost:6379"
 	}
-	fmt.Println("Do connect to redis server")
 	client := redis.NewClient(&redis.Options{
 		Addr:     server,
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
 
-	pong, err := client.Ping().Result()
+	_, err := client.Ping().Result()
 	if err != nil {
-		return nil, err
+		panic(err.Error())
 	}
-	fmt.Println(pong, err)
-	// Output: PONG <nil>
+	fmt.Println("Connected to redis")
 	return client, nil
 }
 
