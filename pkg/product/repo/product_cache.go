@@ -8,9 +8,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/ngdlong91/funtech/cmd/gin/dto"
+	"github.com/ngdlong91/funtech/dto"
 
-	"github.com/ngdlong91/funtech/cmd/gin/res"
+	"github.com/ngdlong91/funtech/res"
 )
 
 type ProductCache interface {

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/ngdlong91/funtech/cmd/gin/pkg/product"
+	"github.com/ngdlong91/funtech/pkg/product"
 
 	"google.golang.org/grpc"
 )

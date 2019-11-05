@@ -3,7 +3,7 @@ package main
 import (
 	"math/rand"
 
-	"github.com/ngdlong91/funtech/cmd/gin/pkg/product/repo"
+	"github.com/ngdlong91/funtech/pkg/product/repo"
 )
 
 const NumberOfRecord int = 200

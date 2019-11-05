@@ -5,52 +5,155 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ngdlong91/funtech/cmd/gin/dto"
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_temp_Select(t *testing.T) {
-	repo := &product{}
-	t.Run("temp repo error", func(t *testing.T) {
-		product, err := repo.Select(777)
+func Test_product_Purchase(t *testing.T) {
+	repo := &product{
+		log: logrus.WithField("test", "productRepo"),
+	}
+
+	productColumns := []string{"id", "quantity"}
+
+	t.Run("cannot begin transaction", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		repo.conn = db
+		mock.ExpectBegin().WillReturnError(errors.New("cannot begin error"))
+		//mock.ExpectQuery("SELECT id, quantity from product where id = ? FOR SHARE").WithArgs(1).
+		//	WillReturnRows(sqlmock.NewRows(productColumns).AddRow(1, 1))
+		//mock.ExpectExec("UPDATE product SET quantity = (quantity - ?) WHERE id = ?").WithArgs(1, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+		//mock.ExpectCommit()
+		_, err = repo.Purchase(1, 777)
+		assert.NotNil(t, err)
+		assert.Equal(t, errors.New("db busy. Try later"), err)
+
+	})
+
+	t.Run("query not found/cannot find query", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		repo.conn = db
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT id, quantity from product where id = ?`).WithArgs(-1).
+			WillReturnRows(sqlmock.NewRows(productColumns))
+		//mock.ExpectExec("UPDATE product SET quantity = (quantity - ?) WHERE id = ?").WithArgs(1, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+		//mock.ExpectCommit()
+		_, err = repo.Purchase(-1, 1)
+		assert.NotNil(t, err)
+		assert.Equal(t, errors.New("invalid requests"), err)
+	})
+
+	t.Run("cannot update but rollback success", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		repo.conn = db
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT id, quantity from product where id = ?`).WithArgs(1).
+			WillReturnRows(sqlmock.NewRows(productColumns).AddRow(1, 5))
+		mock.ExpectExec(`UPDATE product SET quantity `).WithArgs(1, 1).WillReturnError(errors.New("cannot update"))
+		mock.ExpectRollback()
+		//mock.ExpectExec("UPDATE product SET quantity = (quantity - ?) WHERE id = ?").WithArgs(1, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+		//mock.ExpectCommit()
+		_, err = repo.Purchase(1, 1)
+		assert.NotNil(t, err)
+		assert.Equal(t, errors.New("db busy. Try later"), err)
+	})
+
+	t.Run("cannot update but rollback error", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		repo.conn = db
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT id, quantity from product where id = ?`).WithArgs(1).
+			WillReturnRows(sqlmock.NewRows(productColumns).AddRow(1, 5))
+		mock.ExpectExec(`UPDATE product SET quantity `).WithArgs(1, 1).WillReturnError(errors.New("cannot update"))
+		mock.ExpectRollback().WillReturnError(errors.New("cannot rollback"))
+		//mock.ExpectExec("UPDATE product SET quantity = (quantity - ?) WHERE id = ?").WithArgs(1, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+		//mock.ExpectCommit()
+		_, err = repo.Purchase(1, 1)
+		assert.NotNil(t, err)
+		assert.Equal(t, errors.New("db busy. Try later"), err)
+	})
+
+	t.Run("update success but commit failed", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		repo.conn = db
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT id, quantity from product where id = ?`).WithArgs(1).
+			WillReturnRows(sqlmock.NewRows(productColumns).AddRow(1, 5))
+		mock.ExpectExec(`UPDATE product SET quantity `).WithArgs(1, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit().WillReturnError(errors.New("cannot commit"))
+		_, err = repo.Purchase(1, 1)
+		assert.NotNil(t, err)
+		assert.Equal(t, errors.New("db busy. Try later"), err)
+	})
+
+	t.Run("commit failed and rollback failed", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		repo.conn = db
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT id, quantity from product where id = ?`).WithArgs(1).
+			WillReturnRows(sqlmock.NewRows(productColumns).AddRow(1, 5))
+		mock.ExpectExec(`UPDATE product SET quantity `).WithArgs(1, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit().WillReturnError(errors.New("cannot commit"))
+		mock.ExpectRollback().WillReturnError(errors.New("cannot rollback"))
+		_, err = repo.Purchase(1, 1)
+		assert.NotNil(t, err)
+		assert.Equal(t, errors.New("db busy. Try later"), err)
+	})
+
+	t.Run("out of stock", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		repo.conn = db
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT id, quantity from product where id = ?`).WithArgs(1).
+			WillReturnRows(sqlmock.NewRows(productColumns).AddRow(1, 5))
+		_, err = repo.Purchase(1, 10)
+		assert.NotNil(t, err)
+		assert.Equal(t, errors.New("out of stock"), err)
+	})
+
+	t.Run("success", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+		repo.conn = db
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT id, quantity from product where id = ?`).WithArgs(1).
+			WillReturnRows(sqlmock.NewRows(productColumns).AddRow(1, 5))
+		mock.ExpectExec(`UPDATE product SET quantity `).WithArgs(1, 1).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+		_, err = repo.Purchase(1, 1)
 		assert.Nil(t, err)
-		assert.Equal(t, dto.Product{
-			Id:       0,
-			Quantity: 0,
-		}, product)
-
 	})
-
-	t.Run("temp repo not setup", func(t *testing.T) {
-
-	})
-
-	t.Run("temp repo response success", func(t *testing.T) {
-
-	})
-}
-
-func Test_product_Select(t *testing.T) {
-	repo := product{}
-	t.Run("temp repo error", func(t *testing.T) {
-		product, err := repo.Select(5)
-		assert.Error(t, errors.New("cannot get data from temp storage"), err)
-		assert.Equal(t, dto.Product{}, product)
-	})
-
-	t.Run("temp repo is not setup", func(t *testing.T) {
-		err := errors.New("not implement")
-
-		assert.Equal(t, errors.New("temp repo is not setup"), err)
-
-	})
-
-	t.Run("temp repo response success", func(t *testing.T) {
-		err := errors.New("not implement")
-		assert.Equal(t, errors.New("temp repo response successs"), err)
-	})
-}
-
-func Test_product_Update(t *testing.T) {
 
 }

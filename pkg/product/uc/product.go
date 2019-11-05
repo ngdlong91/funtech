@@ -3,9 +3,8 @@ package uc
 import (
 	"github.com/sirupsen/logrus"
 
-	"github.com/ngdlong91/funtech/cmd/gin/pkg/product/repo"
-
-	"github.com/ngdlong91/funtech/cmd/gin/dto"
+	"github.com/ngdlong91/funtech/dto"
+	"github.com/ngdlong91/funtech/pkg/product/repo"
 )
 
 type ProductUseCase interface {
@@ -39,7 +38,7 @@ func (c *product) Purchase(payload dto.RequestPurchase) ([]dto.PurchaseResult, e
 		result = dto.PurchaseResult{
 			Id:        item.Id,
 			IsSuccess: true,
-			Result:    "purchased",
+			Result:    "success",
 		}
 
 		c.log.Debugf("Purchased item %+v \n", item)

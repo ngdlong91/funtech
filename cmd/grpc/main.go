@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/ngdlong91/funtech/cmd/gin/pkg/product"
+	"github.com/ngdlong91/funtech/pkg/product"
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/grpc"

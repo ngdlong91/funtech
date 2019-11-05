@@ -6,9 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ngdlong91/funtech/cmd/gin/res"
-
-	"github.com/ngdlong91/funtech/cmd/gin/dto"
+	"github.com/ngdlong91/funtech/dto"
+	"github.com/ngdlong91/funtech/res"
 	"github.com/sirupsen/logrus"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -95,17 +94,17 @@ func (r *product) doDBSelect(id int) (dto.Product, error) {
 }
 
 func (r *product) Purchase(id, quantity int) (dto.Product, error) {
-	if _, err := r.cache.Update(id, quantity); err != nil {
-		r.log.Errorf("cannot update cache err: %s \n", err.Error())
-		// Todo: Handle case temp storage got problem. Go back or turn flag for this
-	}
+	//if _, err := r.cache.Update(id, quantity); err != nil {
+	//	r.log.Errorf("cannot update cache err: %s \n", err.Error())
+	//	// Todo: Handle case temp storage got problem. Go back or turn flag for this
+	//}
 
 	r.log.Debugf("begin transaction, try to purchase id %d with quantity %d \n", id, quantity)
 	// Do db update
 	tx, err := r.conn.Begin()
 	if err != nil {
-		r.log.Errorf("begin transaction error \n", err.Error())
-		return dto.Product{}, err
+		r.log.Errorf("begin transaction error: %s \n", err.Error())
+		return dto.Product{}, errors.New("db busy. Try later")
 	}
 	r.log.Debugf("Try to get details")
 	rows, err := tx.Query("SELECT id, quantity from product where id = ? FOR SHARE", id)
@@ -124,6 +123,9 @@ func (r *product) Purchase(id, quantity int) (dto.Product, error) {
 		return dto.Product{}, err
 	}
 
+	if product.Id == 0 {
+		return dto.Product{}, errors.New("invalid requests")
+	}
 	r.log.Debugf("ProductRepo details %+v \n", product)
 
 	if product.Quantity >= quantity {
@@ -131,18 +133,18 @@ func (r *product) Purchase(id, quantity int) (dto.Product, error) {
 			r.log.Errorf("cannot update record err: %s \n", err.Error())
 			if err := tx.Rollback(); err != nil {
 				r.log.Errorf("rollback err: %s \n", err.Error())
-				return dto.Product{}, err
+				return dto.Product{}, errors.New("db busy. Try later")
 			}
-			return dto.Product{}, err
+			return dto.Product{}, errors.New("db busy. Try later")
 		}
 
 		if err := tx.Commit(); err != nil {
 			r.log.Errorf("cannot commit err: %s \n", err.Error())
 			if err := tx.Rollback(); err != nil {
 				r.log.Errorf("rollback err: %s \n", err.Error())
-				return dto.Product{}, err
+				return dto.Product{}, errors.New("db busy. Try later")
 			}
-			return dto.Product{}, err
+			return dto.Product{}, errors.New("db busy. Try later")
 		}
 
 		return dto.Product{}, nil

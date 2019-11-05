@@ -6,9 +6,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/ngdlong91/funtech/cmd/gin/dto"
+	"github.com/ngdlong91/funtech/dto"
 
-	"github.com/ngdlong91/funtech/cmd/gin/pkg/product/uc"
+	"github.com/ngdlong91/funtech/pkg/product/uc"
 )
 
 type Service interface {
