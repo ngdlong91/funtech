@@ -4,6 +4,7 @@ package res
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -44,7 +45,12 @@ func connect() *sql.DB {
 }
 
 func getInfo() string {
-	return "root:123456@tcp(localhost:32769)/funtech"
+
+	server := os.Getenv("SQL_SERVER")
+	if server == "" {
+		panic("sql server required")
+	}
+	return server
 }
 
 func (s *SQL) Conn() *sql.DB {

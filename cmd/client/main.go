@@ -47,7 +47,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not purchases: %v", err)
 	}
-	log.Printf("Purchase result: %+v \n", r.Response)
+	log.Printf("Request result: %+v \n", r.Response)
+	log.Printf("Purchase result: %+v \n", r.Result)
 }
 
 func buildRequestFromArgs(args []string) (product.PurchaseRequest, error) {
