@@ -64,3 +64,11 @@ II. Setup & run
     ```
     
   Config environment using .env file
+  
+  - Seeding
+  
+  ./cmd/seed
+  Run
+  ```shell script
+  go run main.go
+  ```
