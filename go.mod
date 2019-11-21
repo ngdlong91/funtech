@@ -9,6 +9,7 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/joho/godotenv v1.3.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
 	golang.org/x/tools v0.0.0-20190524140312-2c0ae7006135 // indirect

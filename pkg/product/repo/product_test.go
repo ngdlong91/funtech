@@ -3,16 +3,40 @@ package repo
 
 import (
 	"errors"
-	"testing"
-
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+	"testing"
 )
 
-func Test_product_Purchase(t *testing.T) {
+//region Test UProduct
+type UProductSuite struct {
+	suite.Suite
+	log *logrus.Entry
+}
+
+func (s *UProductSuite) SetupTest() {
+
+}
+
+func (s *UProductSuite) TearUpTest() {
+
+}
+
+func (s *UProductSuite) TearDownTest() {
+
+}
+
+func (s *UProductSuite) Test_Product_Purchase()  {
+	if !testing.Short() {
+		return
+	}
+
+	t := s.T()
+
 	repo := &product{
-		log: logrus.WithField("test", "productRepo"),
+		log: s.log.WithField("test_type", "unit_test"),
 	}
 
 	productColumns := []string{"id", "quantity"}
@@ -157,3 +181,64 @@ func Test_product_Purchase(t *testing.T) {
 	})
 
 }
+
+
+//endregion End test UProduct
+
+func TestUProductSuite(t *testing.T) {
+
+
+	suite.Run(t, &UProductSuite{
+		log: logrus.WithField("pkg", "TestProductRepo"),
+	})
+}
+
+//region Test IProduct
+type IProductSuite struct {
+	suite.Suite
+	log *logrus.Entry
+}
+
+func (s *IProductSuite) SetupTest() {
+
+}
+
+func (s *IProductSuite) TearUpTest() {
+
+}
+
+func (s *IProductSuite) TearDownTest() {
+
+}
+
+func (s *IProductSuite) Test_Product_Purchase() {
+
+	if testing.Short() {
+		return
+	}
+
+	t := s.T()
+
+	t.Run("quantity is not enough", func(t *testing.T) {
+
+	})
+
+	t.Run("row locked", func(t *testing.T) {
+
+	})
+
+	t.Run("should cause deadlock", func(t *testing.T) {
+
+	})
+
+	t.Run("success", func(t *testing.T) {
+
+	})
+}
+
+//endregion End test IProduct
+
+func TestIProductSuite(t *testing.T) {
+	suite.Run(t, &IProductSuite{})
+}
+

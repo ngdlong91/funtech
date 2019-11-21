@@ -72,3 +72,30 @@ II. Setup & run
   ```shell script
   go run main.go
   ```
+  
+  
+  
+  
+III. Test
+---
+
+- Unit test
+```shell script
+make utest
+```
+
+- Integration test
+```shell script
+make itest
+```
+
+IV. Other
+---
+- CI/CD using travis (more detail in .travis.yml)
+
+V. Next version
+---
+- More consistent db connection/query. 
+- Support MQ 
+- Load/Stress test 
+- Bench
